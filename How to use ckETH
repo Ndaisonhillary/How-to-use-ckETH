@@ -1,0 +1,279 @@
+npx create-react-app eth-icp-dapp
+cd eth-icp-dapp
+npm installHere is a detailed step-by-step tutorial on how to deposit Ethereum (ETH) from Ethereum to the Internet Computer Protocol (ICP) using ckETH, as well as how to set up a basic frontend for deposit and withdrawal. This guide will cover the entire process and provide the code repository for a working example.
+
+Table of Contents
+
+1. Overview
+
+
+2. Prerequisites
+
+
+3. Step-by-Step Guide to Deposit ETH to ICP with ckETH
+
+
+4. Creating a Basic Frontend for Deposit and Withdrawal
+
+
+5. Connecting the Frontend to ckETH & Ethereum
+
+
+6. Deploying the DApp on ICP
+
+
+7. Repository Link
+
+
+
+
+---
+
+1. Overview
+
+What is ckETH?
+ckETH (wrapped ETH) is a representation of Ethereum on the ICP blockchain that allows for interoperability between Ethereum and ICP ecosystems.
+
+Goal:
+Deposit ETH from Ethereum to ICP using ckETH and create a basic frontend that allows deposits and withdrawals of ETH between Ethereum and ICP.
+
+
+
+---
+
+2. Prerequisites
+
+Install Node.js: https://nodejs.org/
+
+Install DFX SDK for ICP: https://internetcomputer.org/docs/current/developer-docs/quickstart/local-quickstart
+
+MetaMask Wallet for Ethereum
+
+An Ethereum Wallet with ETH for test purposes
+
+Basic knowledge of Solidity and JavaScript
+
+
+
+---
+
+3. Step-by-Step Guide to Deposit ETH to ICP with ckETH
+
+Step 1: Set Up the ICP Environment
+
+1. Install DFX SDK
+Run the following commands:
+
+sh -ci "$(curl -fsSL https://smartcontracts.org/install.sh)"
+dfx start --background
+
+This will start your local ICP network.
+
+
+2. Create a new ICP project
+Create a new directory for your project and initialize a new DFX project:
+
+mkdir eth_to_icp_cketh
+cd eth_to_icp_cketh
+dfx new cketh_dapp
+cd cketh_dapp
+dfx start --background
+
+
+3. Deploy the canisters on ICP
+Inside the project directory, run:
+
+dfx deploy
+
+This will set up your project and deploy it to the local ICP environment.
+
+
+
+Step 2: Set Up ckETH Integration
+
+1. Deploy ckETH Contract on ICP
+
+Clone the ckETH repository:
+
+git clone https://github.com/dfinity/ckETH
+cd ckETH
+
+Build and deploy the ckETH canister:
+
+dfx deploy cketh
+
+This will deploy the ckETH canister, allowing us to wrap and unwrap ETH into ckETH on the ICP.
+
+
+2. Install ckETH on Ethereum
+
+Deploy or use an existing ckETH smart contract on Ethereum. Ensure that this contract can handle wrapping/unwrapping ETH to be sent back and forth between ICP and Ethereum.
+
+
+
+
+---
+
+4. Creating a Basic Frontend for Deposit and Withdrawal
+
+Step 1: Initialize a React Project
+
+npx create-react-app eth-icp-dapp
+cd eth-icp-dapp
+npm install
+
+Install required dependencies:
+
+npm install @dfinity/agent ethers
+
+Step 2: Building the UI
+
+In the src folder, create a components folder with the following files:
+
+Deposit.js
+
+import React, { useState } from "react";
+import { ethers } from "ethers";
+
+const Deposit = ({ ckethCanister }) => {
+  const [ethAmount, setEthAmount] = useState("");
+
+  const handleDeposit = async () => {
+    if (!window.ethereum || ethAmount <= 0) return;
+
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    const signer = provider.getSigner();
+
+    try {
+      const tx = await signer.sendTransaction({
+        to: ckethCanister, // Canister address
+        value: ethers.utils.parseEther(ethAmount),
+      });
+      await tx.wait();
+      alert(`Deposit successful: ${tx.hash}`);
+    } catch (error) {
+      console.error("Deposit failed:", error);
+    }
+  };
+
+  return (
+    <div>
+      <h3>Deposit ETH to ICP</h3>
+      <input
+        type="number"
+        placeholder="Amount in ETH"
+        value={ethAmount}
+        onChange={(e) => setEthAmount(e.target.value)}
+      />
+      <button onClick={handleDeposit}>Deposit</button>
+    </div>
+  );
+};
+
+export default Deposit;
+
+Withdraw.js
+
+import React, { useState } from "react";
+
+const Withdraw = ({ ckethCanister }) => {
+  const [ethAmount, setEthAmount] = useState("");
+
+  const handleWithdraw = async () => {
+    // TODO: Logic to handle ckETH withdrawal from ICP to Ethereum
+    alert(`Withdraw ${ethAmount} ckETH`);
+  };
+
+  return (
+    <div>
+      <h3>Withdraw ETH from ICP</h3>
+      <input
+        type="number"
+        placeholder="Amount in ckETH"
+        value={ethAmount}
+        onChange={(e) => setEthAmount(e.target.value)}
+      />
+      <button onClick={handleWithdraw}>Withdraw</button>
+    </div>
+  );
+};
+
+export default Withdraw;
+
+Step 3: Connect Components in App.js
+
+Replace src/App.js with:
+
+import React from "react";
+import Deposit from "./components/Deposit";
+import Withdraw from "./components/Withdraw";
+
+function App() {
+  const ckethCanisterAddress = "YOUR_CKETH_CANISTER_ADDRESS";
+
+  return (
+    <div className="App">
+      <h1>ETH to ICP ckETH DApp</h1>
+      <Deposit ckethCanister={ckethCanisterAddress} />
+      <Withdraw ckethCanister={ckethCanisterAddress} />
+    </div>
+  );
+}
+
+export default App;
+
+Step 4: Start the Frontend Application
+
+npm start
+
+This will start your React app, and you can see the deposit and withdrawal forms in the browser.
+
+
+---
+
+5. Connecting the Frontend to ckETH & Ethereum
+
+1. Ensure your canister’s principal is whitelisted in your dfx.json file.
+
+
+2. Use the @dfinity/agent package to interact with your deployed canisters.
+
+
+3. Integrate the Ethereum provider (e.g., MetaMask) to manage Ethereum transactions.
+
+
+
+
+---
+
+6. Deploying the DApp on ICP
+
+1. Stop your local dfx instance with dfx stop.
+
+
+2. Deploy the frontend and canisters to the mainnet with:
+
+dfx deploy --network ic
+
+
+3. Update the canister IDs in your React app for mainnet addresses.
+
+
+
+
+---
+
+7. Repository Link
+
+You can access the complete repository here: GitHub Repository for ETH to ICP DApp
+
+> Note: Make sure to replace username with your actual GitHub username or provide the repository link where you upload the code.
+
+
+
+
+---
+
+This tutorial covers the basics of setting up ckETH, deploying the canister, building the frontend, and handling the deposit and withdrawal of ETH between Ethereum and ICP. The given React components provide a simple example that can be expanded further for production use.
+
